@@ -7,7 +7,8 @@ always_allow_html: yes
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+post <- "network-analysis-with-r"
+source("common.r")
 ```
 
 Over a wide range of fields network analysis has become an increasingly popular tool for scholars to deal with the complexity of the interrelationships between actors of all sorts. The promise of network analysis is the placement of significance on the relationships between actors, rather than seeing actors as isolated entities. The emphasis on complexity, along with the creation of a variety of algorithms to measure various aspects of networks, makes network analysis a central tool for digital humanities.[^1] This post will provide an introduction to working with networks in [R](https://www.r-project.org), using the example of the network of cities in the correspondence of [Daniel van der Meulen](https://jessesadler.com/project/dvdm-correspondence/) in 1585.
@@ -258,7 +259,7 @@ ggraph(routes_tidy, layout = "graphopt") +
 
 In addition to the layout choices provided by `igraph`, `ggraph` also implements its own layouts. For example, you can use `ggraph's` concept of [circularity](http://www.data-imaginist.com/2017/ggraph-introduction-layouts/) to create arc diagrams. Here, I layout the nodes in a horizontal line and have the edges drawn as arcs. Unlike the previous plot, this graph indicates directionality of the edges.[^9] The edges above the horizontal line move from left to right, while the edges below the line move from right to left. Intsead of adding points for the nodes, I just include the label names. I use the same width aesthetic to denote the difference in the weight of each edge. Note that in this plot I use an `igraph` object as the data for the graph, which makes no practical difference.
 
-```{r ggraph-arc}
+```{r ggraph-arc, fig.width = 12, fig.asp = 0.5}
 ggraph(routes_igraph, layout = "linear") + 
   geom_edge_arc(aes(width = weight), alpha = 0.8) + 
   scale_edge_width(range = c(0.2, 2)) +
@@ -278,7 +279,7 @@ library(networkD3)
 ### visNetwork
 The `visNetwork()` function uses a nodes list and edges list to create an interactive graph. The nodes list must include an "id" column, and the edge list must have "from" and "to" columns. The function also plots the labels for the nodes, using the names of the cities from the "label" column in the node list. The resulting graph is fun to play around with. You can move the nodes and the graph will use an algorithm to keep the nodes properly spaced. You can also zoom in and out on the plot and move it around to re-center it.
 
-```{r visNetwork-simple}
+```{r visNetwork-simple, eval = FALSE}
 visNetwork(nodes, edges)
 ```
 
@@ -290,7 +291,7 @@ edges <- mutate(edges, width = weight/5 + 1)
 
 Once this is done, we can create a graph with variable edge widths. I also choose a layout algorithm from `igraph` and add arrows to the edges, placing them in the middle of the edge.
 
-```{r visNetwork-edgewidth}
+```{r visNetwork-edgewidth, eval = FALSE}
 visNetwork(nodes, edges) %>% 
   visIgraphLayout(layout = "layout_with_fr") %>% 
   visEdges(arrows = "middle")
@@ -306,7 +307,7 @@ edges_d3 <- mutate(edges, from = from - 1, to = to - 1)
 
 It is now possible to plot a `networkD3` graph. Unlike `visNetwork()`, the `forceNetwork()` function uses a series of arguments to adjust the graph and plot network attributes. The "Links" and "Nodes" arguments provide the data for the plot in the form of edge and node lists. The function also requires "NodeID" and "Group" arguments. The data being used here does not have any groupings, and so I just have each node be its own group, which in practice means that the nodes will all be different colors. In addition, the below tells the function that the network has "Source" and "Target" fields, and thus is directed. I include in this graph a "Value", which scales the width of the edges according to the "weight" column in the edge list. Finally, I add some aesthetic tweaks to make the nodes opaque and increase the font size of the labels to improve legibility. The result is very similar to the first `visNetwork()` plot that I created but with different aesthetic stylings.
 
-```{r d3-network-plot, message = FALSE}
+```{r d3-network-plot, eval = FALSE}
 forceNetwork(Links = edges_d3, Nodes = nodes_d3, Source = "from", Target = "to", 
              NodeID = "label", Group = "id", Value = "weight", 
              opacity = 1, fontSize = 16, zoom = TRUE)
@@ -314,7 +315,7 @@ forceNetwork(Links = edges_d3, Nodes = nodes_d3, Source = "from", Target = "to",
 
 One of the main benefits of `networkD3` is that it implements a [d3-styled Sankey diagram](https://bost.ocks.org/mike/sankey/). A Sankey diagram is a good fit for the letters sent to Daniel in 1585. There are not too many nodes in the data, making it easier to visualize the flow of letters. Creating a Sankey diagram uses the `sankeyNetwork()` function, which takes many of the same arguments as `forceNetwork()`. This graph does not require a group argument, and the only other change is the addition of a "unit." This provides a label for the values that pop up in a tool tip when your cursor hovers over a diagram element.[^10]
 
-```{r d3-sankey-diagram, message = FALSE}
+```{r d3-sankey-diagram, eval = FALSE}
 sankeyNetwork(Links = edges_d3, Nodes = nodes_d3, Source = "from", Target = "to", 
               NodeID = "label", Value = "weight", fontSize = 16, unit = "Letter(s)")
 ```

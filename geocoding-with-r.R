@@ -81,14 +81,14 @@ geo_per_source <- left_join(per_source, locations, by = c("source" = "place"))
 geo_per_destination <- left_join(per_destination, locations, by = c("destination" = "place"))
 
 ## Data map 1 ##
-ggmap(bw_map, extent = "device") +
+ggmap(bw_map) +
   geom_point(data = geo_per_destination,
              aes(x = lon, y = lat), color = "red") +
   geom_point(data = geo_per_source,
              aes(x = lon, y = lat), color = "purple")
 
 ## Data map 2 ##
-ggmap(bw_map, extent = "device", legend = "topright") +
+ggmap(bw_map) +
   geom_point(data = geo_per_destination,
              aes(x = lon, y = lat, size = count),
              color = "red", alpha = 0.5) +
@@ -97,7 +97,7 @@ ggmap(bw_map, extent = "device", legend = "topright") +
              color = "purple", alpha = 0.5)
 
 ## Data map 3 ##
-ggmap(bw_map, extent = "device", legend = "topright") +
+ggmap(bw_map) +
   geom_point(data = geo_per_destination,
              aes(x = lon, y = lat, size = count, color = "Destination"), 
              alpha = 0.5) +

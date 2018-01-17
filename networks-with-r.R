@@ -137,13 +137,13 @@ ggraph(routes_igraph, layout = "linear") +
 library(visNetwork)
 
 # Simple interactive plot
-visNetwork(nodes, edges)
+visNetwork(nodes, edges, width = "100%")
 
 # Width attribute
 edges <- mutate(edges, width = weight/5 + 1)
 
 # visNetwork edge width plot
-visNetwork(nodes, edges) %>% 
+visNetwork(nodes, edges, width = "100%") %>% 
   visIgraphLayout(layout = "layout_with_fr") %>% 
   visEdges(arrows = "middle")
 

@@ -7,7 +7,8 @@ always_allow_html: yes
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+post <- "excel-vs-r"
+source("common.R")
 ```
 
 Quantitative research often begins with the humble process of counting. Historical documents are never as plentiful as a historian would wish, but counting words, material objects, court cases, etc. can lead to a better understanding of the sources and the subject under study. When beginning the process of counting, the first instinct is to open a spreadsheet. The end result might be the production of tables and charts created in the very same spreadsheet document. In this post, I want to show why this spreadsheet-centric workflow is problematic and recommend the use of a programming language such as [R](https://www.r-project.org) as an alternative for both analyzing and visualizing data. There is no doubt that the learning curve for R is much steeper than producing one or two charts in a spreadsheet. However, there are real long-term advantages to learning a dedicated data analysis tool like R. Such advice to learn a programming language can seem both daunting and vague, especially [if you do not really understand what it means to code](https://jessesadler.com/post/new-kinds-of-projects/). For this reason, after discussing why it is preferable to analyze data with R instead of a spreadsheet program, this post provides a brief introduction to R, as well as an example of analysis and visualization of historical data with R.[^1]
@@ -140,7 +141,7 @@ per_correspondent
 
 Running the command and printing the result shows a result that was not what we hoped. Instead of showing letters per correspondent, the function created a column called count with a single value equal to the amount of rows in the `letters` data frame. However, because the objects that are made in R are ephemeral, we can simply rerun the code after reworking it. This overwrites the old `per_correspondent` object with one that is more useful. In the first attempt there is no notion that the goal is to group the number of letters by writer. This is the task `group_by()` function. To create an object with correspondents in one column and the number of letters they sent in the second column we need to group the `letters` data frame by writer and then summarize the letters within each group, creating the count column while doing so. The last line of the code arranges the table in descending order of letters sent by the newly created count variable. Notice that the `letters` data frame is listed first before any function. This is because the `letters` data frame is piped into each of the functions with the use of the `%>%` command, which can be read as "and then."
 
-```{r per_correspondent}
+```{r per_correspondent_tbl}
 per_correspondent <- letters %>% 
   group_by(writer) %>% 
   summarise(count = n()) %>% 
@@ -150,7 +151,7 @@ per_correspondent
 
 Looking at the result, we can see that the above changes produced the kind output we expected. The `group_by()` and `summarise()` functions worked to create a data frame in which each author is listed once. The `count = n()` within the `summarise()` function created a new variable called count that is filled with the number of letters each correspondent sent. A cursory look at the results shows that the vast majority of the letters sent to Daniel were written by his brother Andries and his brother-in-law Jacques della Faille. Andries lived in the besieged city of Antwerp for most of 1585, and Jacques lived in Haarlem, so it will hardly be surprising that if we look at the amount of letters sent from each location that Antwerp and Haarlem dominate. Having written the above code, it is possible to rework it to create a data frame called `per_source`, which is done by replacing the writer column in the `group_by()` function with the source variable.
 
-```{r per_source}
+```{r per_source_tbl}
 per_source <- letters %>% 
   group_by(source) %>% 
   summarise(count = n()) %>% 
@@ -161,7 +162,7 @@ per_source
 ## Visualizing the data with `ggplot`
 While it is nice to have the two above sets of information presented in tables, it is also possible to visualize the newly created data with `ggplot`. The structure of `ggplot` functions is a bit different than that of `dplyr`. Like `dplyr` the functions are linked together, but the linking is done with the `+` symbol instead of `%>%`. With `ggplot` the three main functions are `ggplot()`, one or more `geom_*` function, which informs the type of graphical element to draw, and one or more `aes()` function that sets the aesthetic values of the graph. The designation of the data to use and the `aes()` functions can be placed within either the `ggplot()` function, indicating that they apply to all of the geoms, or they can be placed within individual `geom_*` functions in which case they will only be used for that geom. All this is to say that there are a variety of ways to produce the same visuals. The below code adds an extra function to label the axes with `labs()`.
 
-```{r per_source_chart}
+```{r per_source}
 ggplot(data = per_source) +
   geom_bar(aes(x = source, y = count), stat = "identity") +
   labs(x = NULL, y = "Letters written")
@@ -169,7 +170,7 @@ ggplot(data = per_source) +
 
 One part of the above code that might be a bit difficult to figure out is `stat = "identity"`. This needs to be called, because the code to create the `per_source` data frame actually did more work than necessary. `stat = "identity"` tells `geom_bar()` to set the height of the bars to the exact number in the count column. However, with `geom_bar()` only the x-axis needs to be specified. The y value is then calculated automatically based on the x value. Therefore, the below code, which uses the original `letters` data frame, could produce the exact same graph. Because of this, it is little trouble to change the variable for the x-axis to writers and get a completely new graph. Notice the change in the data and the deletion of the y variable and `stat`. One problem with the correspondents data is the length of the names. Therefore, this command makes changes to the `theme()` function. The arguments in the function are used to place the correspondent names at a ninety degree angle so that they do not overlap.
 
-```{r per_correspondent_chart}
+```{r per_correspondent, fig.asp = 1}
 ggplot(data = letters) +
   geom_bar(aes(x = writer)) +
   labs(x = NULL, y = "Letters written") +
@@ -195,7 +196,7 @@ per_month
 
 Looking at the result of this code, a problem is immediately apparent. The number of letters per month is as expected, but the months are returned as numbers, which is less than ideal. However, by looking at the documentation for lubridate by typing `?month()` into the console, it is possible to see that what needs to be done is to change the label argument to TRUE from the default of FALSE.
 
-```{r per_month}
+```{r per_month_tbl}
 per_month <- letters %>% 
   mutate(month = month(date, label = TRUE)) %>% 
   group_by(month) %>% 
@@ -205,7 +206,7 @@ per_month
 
 Now that we have the data in a good form we can plot it by making another bar chart.
 
-```{r per_month graph}
+```{r per_month}
 ggplot(data = per_month) +
   geom_bar(aes(x = month, y = count), stat = "identity") +
   labs(x = 1585, y = "Letters sent")
@@ -215,7 +216,7 @@ The graph shows a peak in March of 1585 when Antwerp was in an extremely vulnera
 
 As a fun aside, it is also possible to see what day of the week the letters were sent. Luckily, the data comes from 1585, three years after the creation of [Gregorian Calendar](http://en.wikipedia.org/wiki/Gregorian_calendar), and the areas from which the letters were sent had already transitioned to the new calendar. This means that they were using the same calendar as we do now, as opposed to a place like England, which only adopted the Gregorian Calendar in 1752. Therefore, we do not have to worry about adding 10 days to move from the old calendar to the new calendar.
 
-```{r per_wday}
+```{r per_wday_tbl}
 per_wday <- letters %>% 
   mutate(wday = wday(date, label = TRUE)) %>% 
   group_by(wday) %>% 
@@ -225,7 +226,7 @@ per_wday
 
 We can even create the chart using the original `letters` data frame and call the `wday()` function within the definition of the x variable.
 
-```{r per_wday graph}
+```{r per_wday}
 ggplot(data = letters) +
   geom_bar(aes(x = wday(date, label = TRUE))) +
   labs(x = 1585, y = "Letters sent")
@@ -240,7 +241,7 @@ letters %>% filter(wday(date) == 1)
 ## Combining data for correspondents and dates
 The `group_by()` and `summarise()` workflow developed so far results in data frames with two columns and thus only tells us about one variable from the data at a time. We can get a better understanding of Daniel's network by looking into how many letters each writer sent per month, which would involve the creation of a data frame with three columns. One advantage of using code is that it is often relatively simple to take a functioning line of code and tweak it to create a different result. Here, I take the line of code that produced `per_month` and alter it by adding the writer variable to the `group_by` function. Now the code will group the letters written by each correspondent per month and then count them. Notice how the dimensions of the resulting data frame has changed.
 
-```{r correspondent_month}
+```{r correspondent_per_month}
 correspondent_month <- letters %>% 
   mutate(month = month(date, label = TRUE)) %>% 
   group_by(writer, month) %>% 
@@ -251,7 +252,7 @@ correspondent_month
 
 With this new object called `correspondent_month` it is possible to add to the bar chart on letters per month, by filling in the bars with letters per correspondent in each month. The only difference in the code below from the earlier chart is the inclusion of `fill = writer` in `geom_bar()` and then giving it a label in `labs()`.
 
-```{r correspondent_month_graph}
+```{r correspondent_month}
 ggplot(data = correspondent_month) +
   geom_bar(aes(x = month, y = count, fill = writer), stat = "identity") +
   labs(x = 1585, y = "Letters sent", fill = "Correspondents")
@@ -259,7 +260,7 @@ ggplot(data = correspondent_month) +
 
 A bar graph is only one of many different geoms made available through `ggplot`, so let me finish by using the same information to produce a line graph with points showing the amount of letters each correspondent sent in a month. The structure of the command is slightly different here, because I place the `aes()` function in the `ggplot()` function. This is done because the same aesthetics will be used by both `geom_point()` and `geom_line()`. In the `geom_point()` function I increase the size of all of the points so that they are more clearly visible. The `geom_line()` function adds a new aesthetic for group, which tells the function how to connect the lines.
 
-```{r line graph}
+```{r line_graph, fig.asp = 0.75}
 ggplot(data = correspondent_month, aes(x = month, y = count, color = writer)) + 
   geom_point(size = 3) + 
   geom_line(aes(group = writer)) + 

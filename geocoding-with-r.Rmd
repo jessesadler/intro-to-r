@@ -7,7 +7,8 @@ always_allow_html: yes
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+post <- "geocoding-with-r"
+source("common.r")
 ```
 
 In the [previous post](https://jessesadler.com/post/excel-vs-r/) I discussed some reasons to use [R](https://www.r-project.org) instead of Excel to analyze and visualize data and provided a brief introduction to the R programming language. That post used an example of letters sent to the sixteenth-century merchant [Daniel van der Meulen](https://jessesadler.com/project/dvdm-correspondence/) in 1585. One aspect missing from the analysis was the visualization of the geographical aspects of the data. This post will provide an introduction to geocoding and mapping location data using the [ggmap](https://cran.r-project.org/web/packages/ggmap/index.html) package for R, which enables the creation of maps with [ggplot](http://ggplot2.tidyverse.org). There are a number of websites that can help geocode location data and even create maps.[^1] You could also use a full-scale geographic information systems (GIS) application such as [QGIS](https://qgis.org) or [ESRI](https://esri.com). However, an active developer community has made it possible to complete a full range of geographic analysis from geocoding data to the creation of publication-ready maps with R.[^2] Geocoding and mapping data with R instead of a web or GIS application brings the general advantages of using a programming language in analyzing and visualizing data. With R, you can write the code once and use it over and over, while also providing a record of all your steps in the creation of a map.[^3]
@@ -112,7 +113,7 @@ mapview(locations_sf)
 
 I can now save the locations data using the `readr` package and a function similar to that used to load data. I will use the `write_csv()` function to save the data as a csv file. Here, I save the `locations` tibble, but you could also save the other forms of the locations data. The second argument tells the function where to save the csv and what to call the file. Here, I place the file in the same folder as the “correspondence-data-1585.csv” and name the file “locations.csv”.
 
-``` {.r}
+``` {.r eval = FALSE}
 write_csv(locations, "data/locations.csv")
 ```
 
@@ -190,8 +191,8 @@ I now have the necessary data to create a map that will distinguish between the 
 ## Mapping the data {#mapping-data}
 Creating a quality visualization with `ggplot` involves iteration. Because the different parts of the plot are all written out in code, aspects can be added, subtracted, or modified until a good balance is found. Let's start by creating a basic map using the `geo_per_source` and `geo_per_destination` data. The structure of the command is similar to that used to make the first map, but now that I am using information from two data frames, I need to use two `geom_point()` functions. There is also a small change to the `ggmap()` function to have the map take up the entire plotting area so that the longitude and latitude scales do not show. The only change to the `geom_point()` function is the addition of different colors for the two sets of points. This makes it easier to distinguish between places from which Daniel's correspondents sent letters and places where he received them. Notice that the argument for the color of the points is placed outside of the `aes()` function. This makes all of the points plotted from each data frame a single color as opposed to mapping a change in color to a variable within the data. In this instance, I chose to specify color by name, but it is also possible to use rgb values, hex values, or a number of different color palettes.[^11]
 
-```{r data-map1}
-ggmap(bw_map, extent = "device") +
+```{r data-map1, fig.width = 8, fig.asp = 0.925}
+ggmap(bw_map) +
   geom_point(data = geo_per_destination,
              aes(x = lon, y = lat), color = "red") +
   geom_point(data = geo_per_source,
@@ -200,8 +201,8 @@ ggmap(bw_map, extent = "device") +
 
 This plot is much better than what we started with, but it still has a couple of issues. In the first place, it does not communicate any information about the quantity of letters. In addition, because the points are opaque, it is not clear that letters were both sent from and to Haarlem. The former issue can be rectified by using the size argument within the `aes()` function. This will tell `ggplot` to vary the size of each of the points in proportion to the count column. By default, the size aesthetic creates a legend to indicate the scale used. In the `ggmap()` function I place the legend in the top right corner of the map since there are no data points there. The latter issue is solved by adding an alpha argument to the two `geom_point()` functions. This argument is placed outside of the `aes()` function, because it is an aspect we want to apply to all points. [Alpha](https://www.w3schools.com/css/css3_colors.asp) describes the translucency of an object and takes values between 1 (opaque) and 0 (translucent).
 
-```{r data-map2}
-ggmap(bw_map, extent = "device", legend = "topright") +
+```{r data-map2, fig.width = 8, fig.asp = 0.875}
+ggmap(bw_map) +
   geom_point(data = geo_per_destination,
              aes(x = lon, y = lat, size = count),
              color = "red", alpha = 0.5) +
@@ -224,8 +225,8 @@ The final touches to the map can be made by ensuring that all of the elements ar
 library(ggrepel)
 ```
 
-```{r data-map3}
-ggmap(bw_map, extent = "device", legend = "topright") +
+```{r data-map3, fig.width = 8, fig.asp = 0.8}
+ggmap(bw_map) +
   geom_point(data = geo_per_destination,
              aes(x = lon, y = lat, size = count, color = "Destination"), 
              alpha = 0.5) +
