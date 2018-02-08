@@ -1,6 +1,6 @@
 ### Introduction to Network Analysis with R ###
 
-# This script corresponds with a blog post
+# This script goes along with the blog post of the same name,
 # which can be found at https://www.jessesadler.com/post/network-analysis-with-r/
 
 library(tidyverse)
