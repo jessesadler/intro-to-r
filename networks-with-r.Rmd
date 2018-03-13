@@ -34,6 +34,7 @@ node_list <- tibble(id = 1:4)
 edge_list
 node_list
 ```
+
 Compare this to an adjacency matrix with the same data.
 
 ```{r adjacency matrix, echo = FALSE}
@@ -74,16 +75,10 @@ nodes <- full_join(sources, destinations, by = "label")
 nodes
 ```
 
-This results in a data frame with one variable. However, the variable contained in the data frame is not really what we are looking for. The "label" column contains the names of the nodes, but we also want to have unique IDs for each city. We can do this by adding an "id" column to the `nodes` data frame that contains numbers from one to whatever the total number of rows in the data frame is. The `nrow()` function will give us the number of rows in the data frame, and we can use the `:` symbol to create a series of numbers from 1 to `nrow()` to fill the column. Taking advantage of the pipe (`%>%`) to link functions, I can also make the small change to place the "id" column as the leftmost column of the data frame.[^4] I reorder the columns of a data frame with the `select()` function, listing the order that I want. There is also a useful shortcut provided by the `everything()` function. This function serves as a placeholder for all remaining columns that have not been listed. This is useful, because if a column is not listed in the `select()` function, it will be dropped. The use of `everything()` is not necessary in this case, because we only need to list two columns, but it would be helpful if there were more attribute columns.
+This results in a data frame with one variable. However, the variable contained in the data frame is not really what we are looking for. The "label" column contains the names of the nodes, but we also want to have unique IDs for each city. We can do this by adding an "id" column to the `nodes` data frame that contains numbers from one to whatever the total number of rows in the data frame is. A helpful function for this workflow is `rowid_to_column()`, which adds a column with the values from the row ids and places the column at the start of the data frame.[^4] Note that `rowid_to_column()` is a pipeable command, and so it is possible to do the `full_join()` and add the "id" column in a single command. The result is a nodes list with an ID column and a label attribute.
 
 ```{r id column}
-nodes <- add_column(nodes, id = 1:nrow(nodes)) %>% 
-  select(id, everything())
-```
-
-The result is a nodes list with an ID column and a label attribute.
-
-```{r print nodes}
+nodes <- nodes %>% rowid_to_column("id")
 nodes
 ```
 

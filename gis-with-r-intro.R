@@ -4,7 +4,7 @@
 # which can be found at https://www.jessesadler.com/post/gis-with-r-intro/
 # See the Rmarkdown document for the contents of the blog post.
 
-### Load libraries and data
+### Load packages and data
 library(tidyverse)
 library(sp)
 library(sf)
