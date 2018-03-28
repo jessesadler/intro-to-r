@@ -1,7 +1,7 @@
 ### An Exploration of Simple Features for R: Building sfg, sfc, and sf objects from the sf package ###
 
 # This script goes along with the blog post of the same name,
-# which can be found at https://www.jessesadler.com/simple-feature-objects/
+# which can be found at https://www.jessesadler.com/post/simple-feature-objects/
 # See the Rmarkdown document for the contents of the blog post.
 
 # Load sf package
